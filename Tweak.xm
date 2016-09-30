@@ -84,6 +84,7 @@ static NSOperationQueue *uninstallQueue;
 {
 	NSString *command = [NSString stringWithFormat:@"sudo /usr/libexec/Cydelete/uninstall_dpkg.sh %@", packageName];
 	system([command UTF8String]);
+	// Add Installation Queue
 }
 
 
@@ -91,22 +92,24 @@ static NSOperationQueue *uninstallQueue;
 {
 	if(![application isSystemApplication])
 	{
+		// AppStore go here
 		%orig;
 	}
 	else
 	{
-		// Delete all others apps here
+		// All other apps go here
+		
 		NSString *whereItComeFrom = [self fromWhereComeThisApplication:application];
 		if([whereItComeFrom isEqualToString:@"Apple"]){
-			
+			// Apple application
 		}
 		else if([whereItComeFrom isEqualToString:@"Orphan"])
 		{
-			//???
+			// Probably user application
 		}
 		else
 		{
-			// Cydia App
+			// Cydia application
 			[self uninstallCydiaPackage:whereItComeFrom];
 			
 		}
