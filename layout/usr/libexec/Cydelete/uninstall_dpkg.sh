@@ -1,5 +1,4 @@
 #!/bin/bash
-
 Output=$(sudo apt-get -y remove $1 2>&1 >/dev/null)
 if Output
 then
