@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sed -i '/uninstall_dpkg.sh/d' /etc/sudoers

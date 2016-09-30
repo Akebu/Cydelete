@@ -1,0 +1,9 @@
+Package: com.tonyciroussel.cydelete9
+Name: Cydelete 9
+Depends: mobilesubstrate, sudo, sed
+Version: 1.0
+Architecture: iphoneos-arm
+Description: Delete *almost* every applications !
+Maintainer: Tony Ciroussel
+Author: Tony Ciroussel
+Section: Tweaks
