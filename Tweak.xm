@@ -4,6 +4,7 @@
 -(NSString *)iconIdentifier;
 -(NSString *)bundleIdentifier;
 -(NSString *)displayName;
+-(int)pid;
 @end
 
 @interface SBApplicationIcon : NSObject
@@ -19,20 +20,48 @@
 @end
 
 @interface SBApplicationController : NSObject
--(void)uninstallApplication:(SBApplication*)application;
+-(void)hideSystemApplication:(NSString *)applicationPath forDisplayName:(NSString *)displayName;
 -(void)uninstallCydiaPackage:(NSString *)packageName;
--(NSString *)fromWhereComeThisApplication:(SBApplication *)application;
+-(NSString *)ownerOfApplication:(SBApplication *)application;
+-(void)applicationUninstalled;
 @end
 
+#define LocalizeString(key, fromTable) [[NSBundle mainBundle] localizedStringForKey:key value:nil table:fromTable]
+#define PathToHiddenApps @"/private/var/mobile/Library/Preferences/com.tonyciroussel.CydeleteHiddensApps.plist"
 
-#define LocalizeString(key) [[NSBundle mainBundle] localizedStringForKey:key value:@"None" table:@"SpringBoard"]
 static NSOperationQueue *uninstallQueue;
+
+static BOOL isEnabled = true;
+static BOOL AllowApple = true;
+static BOOL ProtectCydia = true;
+static BOOL ProtectPangu = true;
+
+%hook SBApplicationInfo
+
+-(NSArray *)tags
+{
+	NSMutableArray *tags = [NSMutableArray arrayWithArray:%orig];
+
+	if ([[NSFileManager defaultManager] fileExistsAtPath:PathToHiddenApps]){
+
+		NSDictionary *hiddenApps = [[NSDictionary alloc] initWithContentsOfFile:PathToHiddenApps];
+		if([hiddenApps objectForKey:[self bundleIdentifier]] != nil){
+			[tags addObject:@"hidden"];
+		}
+		[hiddenApps release];
+	}
+
+	return [NSArray arrayWithArray:tags];
+}
+
+%end
 
 %hook SBApplication
 
--(BOOL)isUninstallAllowed	// Allow system application to be uninstalled
+-(BOOL)isUninstallAllowed
 {
-		return true;
+		// Allow system applications to be uninstalled.
+		return isEnabled;
 }
 
 %end
@@ -40,33 +69,32 @@ static NSOperationQueue *uninstallQueue;
 %hook SBApplicationController
 
 %new(v@:)
--(NSString *)fromWhereComeThisApplication:(SBApplication *)application
+-(NSString *)ownerOfApplication:(SBApplication *)application
 {
-	NSString *whereItComeFrom = @"Orphan";
+
+	NSString *owner = @"Nobody";
 	
 	if([application isSystemApplication]){
 		if([[application iconIdentifier] hasPrefix:@"com.apple"]){
-			whereItComeFrom = @"Apple";
+			return @"Apple";
 		}
 		else
 		{
 			NSArray* dpkg = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:@"/var/lib/dpkg/info/" error:NULL];
+			NSString* bundleWithList = [NSString stringWithFormat:@"%@.list", [application bundleIdentifier]];
+
+			if([[dpkg valueForKeyPath:@"uppercaseString"] indexOfObjectIdenticalTo:[bundleWithList uppercaseString]] != NSNotFound){
+				return [application bundleIdentifier];
+			}
 			
-			if([whereItComeFrom isEqualToString:@"Orphan"]){
-				for(NSString *allPackage in dpkg){
+			for(NSString *allPackage in dpkg){
 	
-					if([[allPackage pathExtension] isEqualToString:@"list"]){
+				if([[allPackage pathExtension] isEqualToString:@"list"]){
 						
-						NSString *completeWay = [NSString stringWithFormat:@"/var/lib/dpkg/info/%@", allPackage];
-						NSString *fileContents = [NSString stringWithContentsOfFile:completeWay encoding:NSUTF8StringEncoding error:NULL];
-						NSArray *linesOfFile = [fileContents componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-						
-						for(NSString *line in linesOfFile){
-							if([line isEqualToString:[application path]]){
-								whereItComeFrom = [allPackage substringToIndex:[allPackage length] - 5];;
-								break;
-							}
-						}
+					NSString *completePath = [NSString stringWithFormat:@"/var/lib/dpkg/info/%@", allPackage];
+					NSString *fileContents = [NSString stringWithContentsOfFile:completePath encoding:NSUTF8StringEncoding error:NULL];
+					if([fileContents containsString:[application path]]){
+						return [allPackage substringToIndex:[allPackage length] - 5];
 					}
 				}
 			}
@@ -74,45 +102,99 @@ static NSOperationQueue *uninstallQueue;
 	}
 	else
 	{
-		whereItComeFrom = @"AppStore";
+		return @"AppStore";
 	}
-	return whereItComeFrom;
+	return owner;
 }
 
 %new(v@:)
 -(void)uninstallCydiaPackage:(NSString *)packageName
 {
-	NSString *command = [NSString stringWithFormat:@"sudo /usr/libexec/Cydelete/uninstall_dpkg.sh %@", packageName];
+   	NSString *command = [NSString stringWithFormat:@"sudo /usr/libexec/Cydelete/./uninstall_dpkg.sh %@", packageName];
 	system([command UTF8String]);
-	// Add Installation Queue
 }
 
+%new(v@:)
+-(void)hideSystemApplication:(NSString *)bundleIdentifier forDisplayName:(NSString *)displayName
+{
+	NSMutableDictionary *hiddenApps;
+
+	if ([[NSFileManager defaultManager] fileExistsAtPath:PathToHiddenApps])
+		hiddenApps = [[NSMutableDictionary alloc] initWithContentsOfFile:PathToHiddenApps];
+	else
+		hiddenApps = [[NSMutableDictionary alloc] init];
+
+	[hiddenApps setValue:displayName forKey:bundleIdentifier];
+	[hiddenApps writeToFile:PathToHiddenApps atomically:YES];
+	[hiddenApps release];
+	
+}
+
+%new(v@:)
+-(void)applicationUninstalled
+{
+	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/tmp/CydeleteError.log"]){
+		NSString *alertTitle = LocalizeString(@"Oops", @"Cydelete");
+		NSString *alertMessage = LocalizeString(@"The application could not be uninstalled because Cydia seems to be busy at the moment. You can now restart the SpringBoard to make the icon reappear", @"Cydelete");
+		NSString *alertCache = LocalizeString(@"Restart", @"Cydelete");
+		NSString *alertLater = LocalizeString(@"Later", @"Cydelete");
+
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:alertTitle 
+                                                 	message:alertMessage 
+							delegate:self 
+                                                    	cancelButtonTitle:alertCache 
+                                                    	otherButtonTitles:alertLater, nil];
+  		[alert show];
+		[alert release];
+			
+	}
+}
+
+%new(v@:)
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+
+    if (buttonIndex == 0)
+    {
+	NSString *command = @"killall backboardd";
+	system([command UTF8String]);
+    }
+}
 
 -(void)uninstallApplication:(SBApplication*)application
 {
-	if(![application isSystemApplication])
-	{
-		// AppStore go here
+	if(![application isSystemApplication]){
 		%orig;
 	}
 	else
 	{
-		// All other apps go here
-		
-		NSString *whereItComeFrom = [self fromWhereComeThisApplication:application];
-		if([whereItComeFrom isEqualToString:@"Apple"]){
-			// Apple application
-		}
-		else if([whereItComeFrom isEqualToString:@"Orphan"])
-		{
-			// Probably user application
-		}
-		else
-		{
-			// Cydia application
-			[self uninstallCydiaPackage:whereItComeFrom];
-			
-		}
+
+		[uninstallQueue addOperationWithBlock:^{
+
+			NSString *owner = [self ownerOfApplication:application];
+			int pid = [application pid];
+
+			if(pid > 0){
+				// Kill the application before uninstall it.
+				NSString *command = [NSString stringWithFormat:@"kill -9 %i", pid];
+				system([command UTF8String]);
+			}
+
+			if([owner isEqualToString:@"Apple"] || [owner isEqualToString:@"Nobody"]){
+
+				[self hideSystemApplication:[application bundleIdentifier] forDisplayName:[application displayName]];
+	
+			}
+			else
+			{
+				[self uninstallCydiaPackage:owner];
+
+				[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+					[self applicationUninstalled];				
+    				}];
+				
+			}
+		}];	
+
 	}
 }
 
@@ -122,27 +204,42 @@ static NSOperationQueue *uninstallQueue;
 
 -(NSString *)uninstallAlertTitle
 {
-	return [NSString stringWithFormat:LocalizeString(@"UNINSTALL_ICON_TITLE_DELETE_WITH_NAME"), [[self application] displayName]];
+	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
+		NSString *alertTitle = [NSString stringWithFormat:LocalizeString(@"Hide \"%@\" ?",@"Cydelete"), [[self application] displayName]];
+		return alertTitle;
+	}
+
+	return [NSString stringWithFormat:LocalizeString(@"UNINSTALL_ICON_TITLE_DELETE_WITH_NAME", @"SpringBoard"), [[self application] displayName]];
 }
 
 -(NSString *)uninstallAlertConfirmTitle
 {
-	return LocalizeString(@"UNINSTALL_ICON_BUTTON_DELETE");
+	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
+		return LocalizeString(@"Hide", @"Cydelete");
+	}
+	
+	return LocalizeString(@"UNINSTALL_ICON_BUTTON_DELETE", @"SpringBoard");
 }
 
 -(NSString *)uninstallAlertCancelTitle
 {
-	return LocalizeString(@"UNINSTALL_ICON_BUTTON_CANCEL");
+	return LocalizeString(@"UNINSTALL_ICON_BUTTON_CANCEL", @"SpringBoard");
 }
 
 -(NSString *)uninstallAlertBody
 {
-	return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA");
+	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
+		return LocalizeString(@"Hidding this application will also hide it from Spotlight", @"Cydelete");
+	}
+	return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA", @"SpringBoard");
 }
 
 -(id)uninstallAlertBodyForAppWithDocumentsInCloud
 {
-	return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA_LEAVES_DOCUMENTS_IN_CLOUD");
+	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
+		return LocalizeString(@"Hidding this application will also hide it from Spotlight", @"Cydelete");
+	}
+	return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA_LEAVES_DOCUMENTS_IN_CLOUD", @"SpringBoard");
 }
 %end
 
@@ -150,8 +247,21 @@ static NSOperationQueue *uninstallQueue;
 
 -(BOOL)isUninstallSupportedForIcon:(SBApplicationIcon*)SBAppIcon
 {
-	if([[SBAppIcon application] isSystemApplication]){
+	if([[SBAppIcon application] isSystemApplication] && (isEnabled)){
+		if( [[[SBAppIcon application] iconIdentifier] isEqualToString:@"com.apple.Preferences"] ){
+			return %orig;
+		}		
+		if(ProtectCydia && [[[SBAppIcon application] iconIdentifier] isEqualToString:@"com.saurik.Cydia"]){
+			return %orig;
+		}
+		else if(!AllowApple && [[[SBAppIcon application] iconIdentifier] hasPrefix:@"com.apple"]){
+				return %orig;
+		}
+
 		return true;
+	}
+	else if( (ProtectPangu) && [[[SBAppIcon application] iconIdentifier] isEqualToString:@"com.wanmei.mini.condorpp-532-8"]){
+		return false;
 	}
 	else
 	{
@@ -161,8 +271,32 @@ static NSOperationQueue *uninstallQueue;
 
 %end
 
+static void loadPrefs() {
+
+	CFPreferencesAppSynchronize(CFSTR("com.tonyciroussel.cydelete"));
+
+	if (CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("isEnabled"), CFSTR("com.tonyciroussel.cydelete")))) {
+		isEnabled = [(id)CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("isEnabled"), CFSTR("com.tonyciroussel.cydelete"))) boolValue];
+	}
+
+	if (CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("ProtectCydia"), CFSTR("com.tonyciroussel.cydelete")))) {
+		ProtectCydia = [(id)CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("ProtectCydia"), CFSTR("com.tonyciroussel.cydelete"))) boolValue];
+	}
+
+	if (CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("ProtectPangu"), CFSTR("com.tonyciroussel.cydelete")))) {
+		ProtectPangu = [(id)CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("ProtectPangu"), CFSTR("com.tonyciroussel.cydelete"))) boolValue];
+	}
+
+	if (CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("isAppleModificationEnabled"), CFSTR("com.tonyciroussel.cydelete")))) {
+		AllowApple = [(id)CFBridgingRelease(CFPreferencesCopyAppValue(CFSTR("isAppleModificationEnabled"), CFSTR("com.tonyciroussel.cydelete"))) boolValue];
+	}
+}
+
 %ctor {
-	%init;
 	uninstallQueue = [[NSOperationQueue alloc] init];
 	[uninstallQueue setMaxConcurrentOperationCount:1];
+
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)loadPrefs, CFSTR("com.tonyciroussel.cydelete/reloadSettings"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+	loadPrefs();
+	%init;
 }

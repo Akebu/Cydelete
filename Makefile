@@ -1,12 +1,15 @@
-ARCHS = arm64
+ARCHS = armv7 arm64
 
-include theos/makefiles/common.mk
+include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Cydelete9
 Cydelete9_FILES = Tweak.xm
+Cydelete9_LDFLAGS += -Wl,-segalign,4000
 Cydelete9_FRAMEWORKS = Foundation, UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
 after-install::
-	install.exec "killall -9 SpringBoard"
+	install.exec "killall backboardd"
+SUBPROJECTS += cydelete
+include $(THEOS_MAKE_PATH)/aggregate.mk
