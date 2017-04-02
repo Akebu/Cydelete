@@ -1,0 +1,7 @@
+"Hide \"%@\" ?" = "隱藏 « %@ » ?";
+"Hidding this application will also hide it from Spotlight" = "隱藏此應用程式會同時從Spotlight下隱藏此應用程序";
+"Hide" = "隱藏";
+"Oops" = "哎呀";
+"The application could not be uninstalled because Cydia seems to be busy at the moment. You can now restart the SpringBoard to make the icon reappear" = "由於現時的Cydia的系統看起來繁忙，因此無法卸載此應用程式。你現在可以重啟Springboard，令圖標重新顯示。";
+"Restart" = "重啟";
+"Later" = "稍後再說";

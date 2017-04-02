@@ -1,0 +1,20 @@
+"General" = "通用";
+"Enabled" = "啟用";
+"Protected applications" = "受保護的應用程式";
+"Custom protection" = "自定受保護的應用程式";
+"Deleting Cydia will leave you without a Graphical Interface for installing packages, and is NOT recommended" = "刪除Cydia會導致已安裝的套裝軟體無法顯示圖形界面，並不推薦";
+"Apple's applications" = "蘋果的應用程式";
+"Allow hidding Apple's apps" = "允許隱藏蘋果應用程式";
+"Allowing Apple's application to be hidden simply" = "允許蘋果應用程式只隱藏";
+"Hidden applications" = "已隱藏的應用程式";
+"Manage applications" = "管理應用程式";
+"Apply" = "應用";
+"View source code" = "查看原始程式碼";
+"Send me a mail" = "按這裡可以發郵件給我";
+"Translations" = "翻譯";
+"Hide your useless application directly from the SpringBoard ! Hidden applications will be displayed here." = "直接從SpringBoard隱藏你認為沒用的應用程式！被隱藏的應用程式將會在此顯示";
+"Hidden apps" = "已被隱藏的應用程式";
+"Tap anywhere to unhide" = "點擊任何地方取消隱藏";
+"♥ A big THANKS to everyone ♥" = "♥ 非常感謝大家 ♥";
+"Thank you for your support <3 !\r“You have not lived today until you have done something for someone who can never repay you.”\r― John Bunyan" = "非常感謝你的支持 <3 !\r“You have not lived today until you have done something for someone who can never repay you”\r― John Bunyan";
+

@@ -1,4 +1,5 @@
 ARCHS = armv7 arm64
+FINALPACKAGE=1
 
 include $(THEOS)/makefiles/common.mk
 

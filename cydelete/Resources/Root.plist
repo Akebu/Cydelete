@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>General</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.tonyciroussel.cydelete</string>
+			<key>key</key>
+			<string>isEnabled</string>
+			<key>label</key>
+			<string>Enabled</string>
+			<key>PostNotification</key>
+			<string>com.tonyciroussel.cydelete/reloadSettings</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Protected applications</string>
+			<key>footerText</key>
+			<string>Deleting Cydia will leave you without a Graphical Interface for installing packages, and is NOT recommended</string>
+		</dict>
+		<dict>
+			<key>cellClass</key>
+			<string>SRSwitchTableCell</string>
+			<key>icon</key>
+			<string>Cydia.png</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.tonyciroussel.cydelete</string>
+			<key>key</key>
+			<string>ProtectCydia</string>
+			<key>label</key>
+			<string>Cydia</string>
+			<key>PostNotification</key>
+			<string>com.tonyciroussel.cydelete/reloadSettings</string>
+		</dict>
+
+		<dict>
+			<key>cellClass</key>
+			<string>SRSwitchTableCell</string>
+			<key>icon</key>
+			<string>Pangu.png</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.tonyciroussel.cydelete</string>
+			<key>key</key>
+			<string>ProtectPangu</string>
+			<key>label</key>
+			<string>Pangu</string>
+			<key>PostNotification</key>
+			<string>com.tonyciroussel.cydelete/reloadSettings</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Apple's applications</string>
+			<key>footerText</key>
+			<string>Allowing Apple's application to be hidden simply</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.tonyciroussel.cydelete</string>
+			<key>key</key>
+			<string>isAppleModificationEnabled</string>
+			<key>label</key>
+			<string>Allow hidding Apple's apps</string>
+			<key>PostNotification</key>
+			<string>com.tonyciroussel.cydelete/reloadSettings</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>CydeleteUnHideController</string>
+			<key>label</key>
+			<string>Manage applications</string>
+		</dict>
+
+		<dict>
+			<key>action</key>
+			<string>applylButtonTapped</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Apply</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>
+CyDelete9 (c) 2014 Tony Ciroussel
+CyDelete8 (c) 2014 Ryan Burke
+CyDelete (c) 2009-2011 Dustin L. Howett</string>
+		</dict>
+
+		<dict>
+			<key>action</key>
+			<string>viewSource</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>Github.png</string>
+			<key>label</key>
+			<string>View source code</string>
+		</dict>
+
+		<dict>
+			<key>action</key>
+			<string>mail</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>Email.png</string>
+			<key>label</key>
+			<string>Send me a mail</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>icon</key>
+			<string>Translation.png</string>
+			<key>detail</key>
+			<string>CydeleteTranslationController</string>
+			<key>label</key>
+			<string>Translations</string>
+		</dict>
+
+	</array>
+	<key>title</key>
+	<string>Cydelete</string>
+</dict>
+</plist>

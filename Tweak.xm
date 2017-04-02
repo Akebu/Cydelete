@@ -68,7 +68,7 @@ static BOOL ProtectPangu = true;
 
 %hook SBApplicationController
 
-%new(v@:)
+%new
 -(NSString *)ownerOfApplication:(SBApplication *)application
 {
 
@@ -86,11 +86,10 @@ static BOOL ProtectPangu = true;
 			if([[dpkg valueForKeyPath:@"uppercaseString"] indexOfObjectIdenticalTo:[bundleWithList uppercaseString]] != NSNotFound){
 				return [application bundleIdentifier];
 			}
-			
+
+			/* Find it manually */
 			for(NSString *allPackage in dpkg){
-	
-				if([[allPackage pathExtension] isEqualToString:@"list"]){
-						
+				if([[allPackage pathExtension] isEqualToString:@"list"]){	
 					NSString *completePath = [NSString stringWithFormat:@"/var/lib/dpkg/info/%@", allPackage];
 					NSString *fileContents = [NSString stringWithContentsOfFile:completePath encoding:NSUTF8StringEncoding error:NULL];
 					if([fileContents containsString:[application path]]){
@@ -107,14 +106,14 @@ static BOOL ProtectPangu = true;
 	return owner;
 }
 
-%new(v@:)
+%new
 -(void)uninstallCydiaPackage:(NSString *)packageName
 {
    	NSString *command = [NSString stringWithFormat:@"sudo /usr/libexec/Cydelete/./uninstall_dpkg.sh %@", packageName];
 	system([command UTF8String]);
 }
 
-%new(v@:)
+%new
 -(void)hideSystemApplication:(NSString *)bundleIdentifier forDisplayName:(NSString *)displayName
 {
 	NSMutableDictionary *hiddenApps;
@@ -130,7 +129,7 @@ static BOOL ProtectPangu = true;
 	
 }
 
-%new(v@:)
+%new
 -(void)applicationUninstalled
 {
 	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/tmp/CydeleteError.log"]){
@@ -150,7 +149,7 @@ static BOOL ProtectPangu = true;
 	}
 }
 
-%new(v@:)
+%new
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
 
     if (buttonIndex == 0)
@@ -207,19 +206,19 @@ static BOOL ProtectPangu = true;
 	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
 		NSString *alertTitle = [NSString stringWithFormat:LocalizeString(@"Hide \"%@\" ?",@"Cydelete"), [[self application] displayName]];
 		return alertTitle;
+	}else{
+		return [NSString stringWithFormat:LocalizeString(@"UNINSTALL_ICON_TITLE_DELETE_WITH_NAME", @"SpringBoard"), [[self application] displayName]];
 	}
-
-	return [NSString stringWithFormat:LocalizeString(@"UNINSTALL_ICON_TITLE_DELETE_WITH_NAME", @"SpringBoard"), [[self application] displayName]];
 }
 
 -(NSString *)uninstallAlertConfirmTitle
 {
 	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
 		return LocalizeString(@"Hide", @"Cydelete");
+	}else{
+		return LocalizeString(@"UNINSTALL_ICON_BUTTON_DELETE", @"SpringBoard");
 	}
-	
-	return LocalizeString(@"UNINSTALL_ICON_BUTTON_DELETE", @"SpringBoard");
-}
+}	
 
 -(NSString *)uninstallAlertCancelTitle
 {
@@ -230,16 +229,18 @@ static BOOL ProtectPangu = true;
 {
 	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
 		return LocalizeString(@"Hidding this application will also hide it from Spotlight", @"Cydelete");
+	}else{
+		return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA", @"SpringBoard");
 	}
-	return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA", @"SpringBoard");
 }
 
 -(id)uninstallAlertBodyForAppWithDocumentsInCloud
 {
 	if([[[self application] iconIdentifier] hasPrefix:@"com.apple"]){
 		return LocalizeString(@"Hidding this application will also hide it from Spotlight", @"Cydelete");
+	}else{
+		return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA_LEAVES_DOCUMENTS_IN_CLOUD", @"SpringBoard");
 	}
-	return LocalizeString(@"UNINSTALL_ICON_BODY_DELETE_DATA_LEAVES_DOCUMENTS_IN_CLOUD", @"SpringBoard");
 }
 %end
 
@@ -256,9 +257,9 @@ static BOOL ProtectPangu = true;
 		}
 		else if(!AllowApple && [[[SBAppIcon application] iconIdentifier] hasPrefix:@"com.apple"]){
 				return %orig;
+		}else{
+			return true;
 		}
-
-		return true;
 	}
 	else if( (ProtectPangu) && [[[SBAppIcon application] iconIdentifier] isEqualToString:@"com.wanmei.mini.condorpp-532-8"]){
 		return false;
@@ -293,10 +294,10 @@ static void loadPrefs() {
 }
 
 %ctor {
+	%init;
 	uninstallQueue = [[NSOperationQueue alloc] init];
 	[uninstallQueue setMaxConcurrentOperationCount:1];
 
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)loadPrefs, CFSTR("com.tonyciroussel.cydelete/reloadSettings"), NULL, CFNotificationSuspensionBehaviorCoalesce);
 	loadPrefs();
-	%init;
 }

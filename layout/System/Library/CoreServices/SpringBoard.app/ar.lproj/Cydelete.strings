@@ -1,0 +1,7 @@
+"Hide \"%@\" ?" = "إخفاء « %@ » ?";
+"Hidding this application will also hide it from Spotlight" = "إخفاء هذا التطبيق سيخفيه من واجهة الحهاز أيضاً";
+"Hide" = "إخفاء";
+"Oops" = "يا للهول";
+"The application could not be uninstalled because Cydia seems to be busy at the moment. You can now restart the SpringBoard to make the icon reappear" = "لا يمكن حذف التطبيق لأن سيديا يعمل حالياً، يمكنك إعادة تشغيل واجهة النظام لإظهار الأيقونة مجدداً";
+"Restart" = "أعد التشغيل";
+"Later" = "لاحقاً";

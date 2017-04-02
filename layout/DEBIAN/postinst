@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo -e 'mobile ALL = NOPASSWD: /usr/libexec/Cydelete/uninstall_dpkg.sh\n' | (EDITOR='tee -a' visudo)>/dev/null
+echo -e 'mobile ALL=(root) NOPASSWD: /usr/libexec/Cydelete/uninstall_dpkg.sh' | (EDITOR='tee -a' visudo)>/dev/null
