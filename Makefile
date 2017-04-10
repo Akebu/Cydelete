@@ -3,10 +3,10 @@ FINALPACKAGE=1
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = Cydelete9
-Cydelete9_FILES = Tweak.xm
-Cydelete9_LDFLAGS += -Wl,-segalign,4000
-Cydelete9_FRAMEWORKS = Foundation, UIKit
+TWEAK_NAME = Cydelete
+Cydelete_FILES = Tweak.xm
+Cydelete_LDFLAGS += -Wl,-segalign,4000
+Cydelete_FRAMEWORKS = Foundation, UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
